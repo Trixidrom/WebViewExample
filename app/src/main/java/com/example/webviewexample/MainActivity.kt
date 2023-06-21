@@ -1,5 +1,6 @@
 package com.example.webviewexample
 
+import android.annotation.SuppressLint
 import android.os.Bundle
 import android.view.ViewGroup
 import android.webkit.WebView
@@ -28,10 +29,11 @@ class MainActivity : ComponentActivity() {
     }
 }
 
+
+@SuppressLint("SetJavaScriptEnabled")
 @Composable
 fun WebViewPage(url: String){
-    // Добавление WebView внутрь AndroidView
-    // с макетом во весь экран
+    // Добавление WebView внутрь AndroidView с макетом во весь экран
     AndroidView(factory = {context ->
         WebView(context).apply {
             layoutParams = ViewGroup.LayoutParams(
@@ -40,6 +42,13 @@ fun WebViewPage(url: String){
             )
 
             webViewClient = WebViewClient()
+
+            // включаем JS
+            settings.javaScriptEnabled = true
+
+            // чтобы убедиться, что клиент, запрашивающий вашу веб-страницу, на самом деле является вашим Android-приложением.
+            settings.userAgentString = System.getProperty("http.agent") //Dalvik/2.1.0 (Linux; U; Android 11; M2012K11I Build/RKQ1.201112.002)
+
             loadUrl(url)
         }
     }, update = {
