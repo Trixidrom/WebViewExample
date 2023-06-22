@@ -1,10 +1,12 @@
 package com.example.webviewexample
 
 import android.annotation.SuppressLint
+import android.content.res.Configuration
 import android.os.Bundle
 import android.view.ViewGroup
 import android.webkit.WebView
 import android.webkit.WebViewClient
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.fillMaxSize
@@ -12,6 +14,8 @@ import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.viewinterop.AndroidView
 import com.example.webviewexample.ui.theme.WebViewExampleTheme
 
@@ -33,9 +37,22 @@ class MainActivity : ComponentActivity() {
 @SuppressLint("SetJavaScriptEnabled")
 @Composable
 fun WebViewPage(url: String){
+    val context = LocalContext.current
+
+    //Проверяет ориентацию экрана
+    val configuration = LocalConfiguration.current
+    when (configuration.orientation) {
+        Configuration.ORIENTATION_LANDSCAPE -> {
+            Toast.makeText(context, "landscape", Toast.LENGTH_SHORT).show()
+        }
+        else -> {
+            Toast.makeText(context, "portrait", Toast.LENGTH_SHORT).show()
+        }
+    }
+
     // Добавление WebView внутрь AndroidView с макетом во весь экран
-    AndroidView(factory = {context ->
-        WebView(context).apply {
+    AndroidView(factory = {
+        WebView(it).apply {
             layoutParams = ViewGroup.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.MATCH_PARENT
