@@ -26,7 +26,8 @@ class MainActivity : ComponentActivity() {
             WebViewExampleTheme {
                 // A surface container using the 'background' color from the theme
                 Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colors.background) {
-                    WebViewPage("https://www.boltuix.com/")
+                    WebViewPage("file:///android_asset/index.html") //OFFLINE
+                    //WebViewPage("https://www.boltuix.com/")
                 }
             }
         }
