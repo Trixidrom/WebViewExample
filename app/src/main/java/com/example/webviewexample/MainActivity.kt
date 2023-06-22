@@ -12,7 +12,7 @@ import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Surface
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
@@ -26,8 +26,8 @@ class MainActivity : ComponentActivity() {
             WebViewExampleTheme {
                 // A surface container using the 'background' color from the theme
                 Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colors.background) {
-                    WebViewPage("file:///android_asset/index.html") //OFFLINE
-                    //WebViewPage("https://www.boltuix.com/")
+                    //WebViewPage("file:///android_asset/index.html") //OFFLINE
+                    WebViewPage("https://www.boltuix.com/")
                 }
             }
         }
@@ -38,6 +38,7 @@ class MainActivity : ComponentActivity() {
 @SuppressLint("SetJavaScriptEnabled")
 @Composable
 fun WebViewPage(url: String){
+    var facebookTrigger by remember { mutableStateOf(false) }
     val context = LocalContext.current
 
     //Проверяет ориентацию экрана
@@ -64,6 +65,21 @@ fun WebViewPage(url: String){
             // включаем JS
             settings.javaScriptEnabled = true
 
+            webViewClient = object : WebViewClient(){
+
+                //Если ссылка, куда мы пытаемся перейти содержит "facebook.com", то мы ее подменяем путем переключения триггера
+                @Deprecated("Deprecated in Java")
+                override fun shouldOverrideUrlLoading(view: WebView?, url: String): Boolean {
+                    if(url.contains("facebook.com")){
+                        facebookTrigger = true
+                        Toast.makeText(context, "Тут какое-то действие", Toast.LENGTH_SHORT).show()
+                        return true
+                    }
+                    return false
+                }
+
+            }
+
             // чтобы убедиться, что клиент, запрашивающий вашу веб-страницу, на самом деле является вашим Android-приложением.
             settings.userAgentString = System.getProperty("http.agent") //Dalvik/2.1.0 (Linux; U; Android 11; M2012K11I Build/RKQ1.201112.002)
 
@@ -72,4 +88,10 @@ fun WebViewPage(url: String){
     }, update = {
         it.loadUrl(url)
     })
+
+    //Переход подменяется путем открытия нового WebView
+    if(facebookTrigger){
+        //WebViewPage(url = "http://www.instagram.com/boltuix/")
+        WebViewPage(url = "https://mnogotovarov.ru/")
+    }
 }
