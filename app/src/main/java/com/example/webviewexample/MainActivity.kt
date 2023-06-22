@@ -1,9 +1,11 @@
 package com.example.webviewexample
 
 import android.annotation.SuppressLint
+import android.content.Context
 import android.content.res.Configuration
 import android.os.Bundle
 import android.view.ViewGroup
+import android.webkit.JavascriptInterface
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import android.widget.Toast
@@ -35,10 +37,11 @@ class MainActivity : ComponentActivity() {
 }
 
 
-@SuppressLint("SetJavaScriptEnabled")
+@SuppressLint("SetJavaScriptEnabled", "JavascriptInterface")
 @Composable
 fun WebViewPage(url: String){
     var facebookTrigger by remember { mutableStateOf(false) }
+    val infoDialog = remember { mutableStateOf(false) }
     val context = LocalContext.current
 
     //Проверяет ориентацию экрана
@@ -62,8 +65,11 @@ fun WebViewPage(url: String){
 
             webViewClient = WebViewClient()
 
-            // включаем JS
+            // включаем JS (просмотр видео,
             settings.javaScriptEnabled = true
+
+            //Связываем JS код с кодом Андроида, передаем интерфейс
+            addJavascriptInterface(WebAppInterface(context, infoDialog), "Android")
 
             webViewClient = object : WebViewClient(){
 
@@ -89,9 +95,30 @@ fun WebViewPage(url: String){
         it.loadUrl(url)
     })
 
+    if (infoDialog.value) {
+        InfoDialog(
+            title = "Отработал JS код",
+            desc = "Тут может быть сообщение",
+            onDismiss = {
+                infoDialog.value = false
+            }
+        )
+    }
+
     //Переход подменяется путем открытия нового WebView
     if(facebookTrigger){
         //WebViewPage(url = "http://www.instagram.com/boltuix/")
         WebViewPage(url = "https://mnogotovarov.ru/")
+    }
+}
+
+//Создайте интерфейс и установите контекст
+class WebAppInterface (private val mContext: Context, private var infoDialog: MutableState<Boolean>){
+    //Показать toast с веб страницы
+    @JavascriptInterface
+    fun showToast(toast: String){
+        //Тут ваши действия
+        infoDialog.value = true
+        Toast.makeText(mContext, toast, Toast.LENGTH_SHORT).show()
     }
 }
