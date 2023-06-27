@@ -84,6 +84,12 @@ fun WebViewPage(url: String){
                     return false
                 }
 
+                //WebView, часть 7 | Скрыть элементы из веб-представления
+                override fun onPageFinished(view: WebView?, url: String?) {
+                    super.onPageFinished(view, url)
+                    removeElement(view!!)
+                }
+
             }
 
             // чтобы убедиться, что клиент, запрашивающий вашу веб-страницу, на самом деле является вашим Android-приложением.
@@ -110,6 +116,21 @@ fun WebViewPage(url: String){
         //WebViewPage(url = "http://www.instagram.com/boltuix/")
         WebViewPage(url = "https://mnogotovarov.ru/")
     }
+}
+
+fun removeElement(webView: WebView) {
+
+    // скрыть элемент по id
+    webView.loadUrl("javascript:(function() { document.getElementById('blog-pager').style.display='none';})()")
+
+    // мы также можем скрыть имя класса
+    webView.loadUrl("javascript:(function() { document.getElementsByClassName('btn')[0].style.display='none';})()")
+    webView.loadUrl("javascript:(function() { document.getElementsByClassName('btn')[1].style.display='none';})()")
+    webView.loadUrl("javascript:(function() { document.getElementsByClassName('btn')[2].style.display='none';})()")
+    webView.loadUrl("javascript:(function() { document.getElementsByClassName('btn')[3].style.display='none';})()")
+    webView.loadUrl("javascript:(function() { document.getElementsByClassName('btn')[4].style.display='none';})()")
+    webView.loadUrl("javascript:(function() { document.getElementsByClassName('btn')[5].style.display='none';})()")
+    webView.loadUrl("javascript:(function() { document.getElementsByClassName('btn')[6].style.display='none';})()")
 }
 
 //Создайте интерфейс и установите контекст
