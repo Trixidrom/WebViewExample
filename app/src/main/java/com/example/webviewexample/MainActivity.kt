@@ -3,6 +3,7 @@ package com.example.webviewexample
 import android.annotation.SuppressLint
 import android.content.Context
 import android.content.res.Configuration
+import android.graphics.Bitmap
 import android.os.Bundle
 import android.view.ViewGroup
 import android.webkit.JavascriptInterface
@@ -10,6 +11,7 @@ import android.webkit.WebView
 import android.webkit.WebViewClient
 import android.widget.Toast
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material.MaterialTheme
@@ -43,6 +45,10 @@ fun WebViewPage(url: String){
     var facebookTrigger by remember { mutableStateOf(false) }
     val infoDialog = remember { mutableStateOf(false) }
     val context = LocalContext.current
+
+    //Триггер для навигации назад
+    var backEnabled by remember{ mutableStateOf(false) }
+    var webView: WebView? = null
 
     //Проверяет ориентацию экрана
     val configuration = LocalConfiguration.current
@@ -90,17 +96,25 @@ fun WebViewPage(url: String){
                     removeElement(view!!)
                 }
 
+                override fun onPageStarted(view: WebView, url: String?, favicon: Bitmap?) {
+                    //при старте проверяем, есть ли возможность вернуться назад
+                    backEnabled = view.canGoBack()
+                }
+
             }
 
             // чтобы убедиться, что клиент, запрашивающий вашу веб-страницу, на самом деле является вашим Android-приложением.
             settings.userAgentString = System.getProperty("http.agent") //Dalvik/2.1.0 (Linux; U; Android 11; M2012K11I Build/RKQ1.201112.002)
 
             loadUrl(url)
+            webView = this
         }
     }, update = {
-        it.loadUrl(url)
+        webView = it
+        //it.loadUrl(url)
     })
 
+    //открывается диалог при отрабатывании js
     if (infoDialog.value) {
         InfoDialog(
             title = "Отработал JS код",
@@ -111,10 +125,16 @@ fun WebViewPage(url: String){
         )
     }
 
-    //Переход подменяется путем открытия нового WebView
+    //Переход на facebook подменяется путем открытия нового WebView
     if(facebookTrigger){
         //WebViewPage(url = "http://www.instagram.com/boltuix/")
         WebViewPage(url = "https://mnogotovarov.ru/")
+    }
+
+    //если есть куда возвращаться, срабатывает backHandler, если нет, приложение закроется (поведение по умолчанию)
+    BackHandler(enabled = backEnabled) {
+        //removeElement(webView!!)
+        webView?.goBack()
     }
 }
 
