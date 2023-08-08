@@ -7,6 +7,8 @@ import android.graphics.Bitmap
 import android.os.Bundle
 import android.view.ViewGroup
 import android.webkit.JavascriptInterface
+import android.webkit.WebResourceRequest
+import android.webkit.WebResourceResponse
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import android.widget.Toast
@@ -22,6 +24,11 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.viewinterop.AndroidView
 import com.example.webviewexample.ui.theme.WebViewExampleTheme
+import java.io.BufferedReader
+import java.io.ByteArrayInputStream
+import java.io.IOException
+import java.io.InputStreamReader
+import java.lang.StringBuilder
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -45,6 +52,21 @@ fun WebViewPage(url: String){
     var facebookTrigger by remember { mutableStateOf(false) }
     val infoDialog = remember { mutableStateOf(false) }
     val context = LocalContext.current
+
+    //Удаляем рекламу
+    //извлекаем данные и добавляем в stringBuilder
+    val adServers = StringBuilder()
+    var line: String? = ""
+    val inputStream = context.resources.openRawResource(R.raw.adblockserverlist)
+    val br = BufferedReader(InputStreamReader(inputStream))
+    try {
+        while (br.readLine().also { line = it } != null){
+            adServers.append(line)
+            adServers.append("\n")
+        }
+    }catch (e: IOException){
+        e.printStackTrace()
+    }
 
     //Триггер для навигации назад
     var backEnabled by remember{ mutableStateOf(false) }
@@ -99,6 +121,14 @@ fun WebViewPage(url: String){
                 override fun onPageStarted(view: WebView, url: String?, favicon: Bitmap?) {
                     //при старте проверяем, есть ли возможность вернуться назад
                     backEnabled = view.canGoBack()
+                }
+
+                override fun shouldInterceptRequest(view: WebView?, request: WebResourceRequest): WebResourceResponse? {
+                    val empty = ByteArrayInputStream("".toByteArray())
+                    val kk5 = adServers.toString()
+                    if (kk5.contains(":::::" + request.url.host))
+                        return WebResourceResponse( "text/plain", "utf-8", empty)
+                    return super.shouldInterceptRequest(view, request)
                 }
 
             }
