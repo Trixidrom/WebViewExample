@@ -7,6 +7,7 @@ import android.graphics.Bitmap
 import android.os.Bundle
 import android.view.ViewGroup
 import android.webkit.JavascriptInterface
+import android.webkit.WebResourceError
 import android.webkit.WebResourceRequest
 import android.webkit.WebResourceResponse
 import android.webkit.WebView
@@ -48,6 +49,7 @@ import java.io.IOException
 import java.io.InputStreamReader
 import java.lang.StringBuilder
 
+var loadURL = "https://www.boltuix.com/"
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -56,7 +58,7 @@ class MainActivity : ComponentActivity() {
                 // A surface container using the 'background' color from the theme
                 Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colors.background) {
                     //WebViewPage("file:///android_asset/index.html") //OFFLINE
-                    WebViewPage("https://www.boltuix.com/")
+                    WebViewPage(loadURL)
                 }
             }
         }
@@ -70,6 +72,10 @@ fun WebViewPage(url: String){
 
     //триггер для загрузчика
     val loaderDialogScreen = remember { mutableStateOf(false) }
+
+    //триггер ошибки загрузки страницы
+    var errorPageTrigger by remember { mutableStateOf(false) }
+
     var facebookTrigger by remember { mutableStateOf(false) }
     val infoDialog = remember { mutableStateOf(false) }
     val context = LocalContext.current
@@ -152,12 +158,21 @@ fun WebViewPage(url: String){
                     loaderDialogScreen.value = true //показываем лоадер
                 }
 
+                //для скрытия рекламы
                 override fun shouldInterceptRequest(view: WebView?, request: WebResourceRequest): WebResourceResponse? {
                     val empty = ByteArrayInputStream("".toByteArray())
                     val kk5 = adServers.toString()
                     if (kk5.contains(":::::" + request.url.host))
                         return WebResourceResponse( "text/plain", "utf-8", empty)
                     return super.shouldInterceptRequest(view, request)
+                }
+
+                //если ошибка при загрузке страницы, подменяем ее на нашу с ошибкой
+                override fun onReceivedError(view: WebView?, request: WebResourceRequest, error: WebResourceError?) {
+                    super.onReceivedError(view, request, error)
+
+                    loadURL = "file:///android_asset/404.html"
+                    errorPageTrigger = true
                 }
 
             }
@@ -194,6 +209,11 @@ fun WebViewPage(url: String){
     BackHandler(enabled = backEnabled) {
         //removeElement(webView!!)
         webView?.goBack()
+    }
+
+    //если при загрузке страницы ошибка
+    if(errorPageTrigger){
+        WebViewPage(url = loadURL)
     }
 }
 
