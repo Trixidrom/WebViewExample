@@ -15,14 +15,32 @@ import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Surface
+import androidx.compose.material.Text
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import com.example.webviewexample.ui.theme.WebViewExampleTheme
 import java.io.BufferedReader
 import java.io.ByteArrayInputStream
@@ -49,9 +67,16 @@ class MainActivity : ComponentActivity() {
 @SuppressLint("SetJavaScriptEnabled", "JavascriptInterface")
 @Composable
 fun WebViewPage(url: String){
+
+    //триггер для загрузчика
+    val loaderDialogScreen = remember { mutableStateOf(false) }
     var facebookTrigger by remember { mutableStateOf(false) }
     val infoDialog = remember { mutableStateOf(false) }
     val context = LocalContext.current
+
+    if(loaderDialogScreen.value){
+        Loader(loaderDialogScreen)
+    }
 
     //Удаляем рекламу
     //извлекаем данные и добавляем в stringBuilder
@@ -116,11 +141,15 @@ fun WebViewPage(url: String){
                 override fun onPageFinished(view: WebView?, url: String?) {
                     super.onPageFinished(view, url)
                     removeElement(view!!)
+
+                    loaderDialogScreen.value = false //по завершению загрузки страницы прячем лоадер
                 }
 
                 override fun onPageStarted(view: WebView, url: String?, favicon: Bitmap?) {
                     //при старте проверяем, есть ли возможность вернуться назад
                     backEnabled = view.canGoBack()
+
+                    loaderDialogScreen.value = true //показываем лоадер
                 }
 
                 override fun shouldInterceptRequest(view: WebView?, request: WebResourceRequest): WebResourceResponse? {
@@ -191,5 +220,69 @@ class WebAppInterface (private val mContext: Context, private var infoDialog: Mu
         //Тут ваши действия
         infoDialog.value = true
         Toast.makeText(mContext, toast, Toast.LENGTH_SHORT).show()
+    }
+}
+
+@OptIn(ExperimentalComposeUiApi::class)
+@Composable
+fun Loader(loaderDialogScreen: MutableState<Boolean>) {
+    // Dialog function
+    Dialog(
+        onDismissRequest = {
+            loaderDialogScreen.value = false
+        },
+        properties = DialogProperties(
+            usePlatformDefaultWidth = false // experimental
+        )
+    ) {
+        Surface(modifier = Modifier.fillMaxSize()) {
+
+            Column(
+                modifier = Modifier.fillMaxSize(),
+                verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+
+
+
+                Image(
+                    painter = painterResource(id = R.drawable.logo),
+                    contentDescription = null,
+                    contentScale = ContentScale.Fit,
+                    modifier = Modifier
+                        .height(200.dp)
+                        .fillMaxWidth(),
+
+                    )
+
+                Spacer(modifier = Modifier.height(20.dp))
+                Text(
+                    text = "Loading...",
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier
+                        .padding(top = 20.dp)
+                        .fillMaxWidth(),
+                    letterSpacing = 2.sp,
+                    fontWeight = FontWeight.Bold,
+                    style = MaterialTheme.typography.h5,
+                    color = MaterialTheme.colors.primary,
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+
+                Text(
+                    text = "Please wait",
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier
+                        .padding(top = 10.dp, start = 25.dp, end = 25.dp)
+                        .fillMaxWidth(),
+                    letterSpacing = 3.sp,
+                    style = MaterialTheme.typography.h5,
+                    color = MaterialTheme.colors.primary,
+                )
+                Spacer(modifier = Modifier.height(24.dp))
+
+            }
+
+        }
     }
 }
